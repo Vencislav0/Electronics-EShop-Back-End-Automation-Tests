@@ -1,4 +1,4 @@
-# Initial Instructions for Using SoftUni REST API
+# Initial Instructions for Using ESHOP REST API
 This is a Node.js Express RESTful API application with various routes for handling users, products, blogs, categories, brands, colors, enquiries, and coupons. It uses MongoDB for data storage.
 ## Prerequisites
 Installed Docker: Docker Installation
