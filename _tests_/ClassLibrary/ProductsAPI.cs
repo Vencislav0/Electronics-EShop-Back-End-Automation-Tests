@@ -13,6 +13,7 @@ namespace ClassLibrary
     {
         private RestClient client;
         private string token;
+        
         public void Dispose()
         {
             client?.Dispose();  
@@ -42,6 +43,40 @@ namespace ClassLibrary
 
 
 
+        }
+
+        public dynamic PostProduct(string title)
+        {
+            
+            
+            client = new RestClient(GlobalConstants.BaseUrl);
+            token = GlobalConstants.AuthenticateUser("admin@gmail.com", "admin@gmail.com");
+            if (token == null)
+            {
+                throw new Exception("Authentication token is null or empty");
+            }
+
+            var request = new RestRequest("/product", Method.Post);
+            request.AddHeader("Authorization", $"Bearer {token}");
+            request.AddJsonBody(new
+            {
+                title,
+                slug = "TestSlug",
+                description = "This is a test description",
+                price = 1000.99,
+                category = "TestCategory",
+                brand = "TestBrand",
+                quantity = 25
+            });
+
+            var response = client.Execute(request);
+
+            if(response.StatusCode != HttpStatusCode.OK)
+            {
+                throw new Exception($"Authentication failed with status code {response.StatusCode}, and response content {response.Content}");
+            }
+
+            return response;
         }
 
 
