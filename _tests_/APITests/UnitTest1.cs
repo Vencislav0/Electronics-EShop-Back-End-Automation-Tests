@@ -9,16 +9,19 @@ namespace APITests
         protected ProductsAPI product;
         protected GlobalConstants globalConstants;
         protected Random random;
+        protected BlogsAPI blog;
         [SetUp]
         public void Setup()
         {
             product = new ProductsAPI();
             random = new Random();
+            blog = new BlogsAPI();
         }
         [TearDown]
         public void TearDown() 
         { 
             product?.Dispose();
+            blog?.Dispose();
         }
 
         //Tests for products functionallity
@@ -183,6 +186,57 @@ namespace APITests
 
         }
 
+        //Tests for Blogs functionality
+
+        [Test]
+        public void Test_GetAllBlogs()
+        {
+            var result = blog.GetAllBlogs();
+            var blogsArray = JArray.Parse(result.Content);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(result.Content, Is.Not.Empty);
+                Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+                Assert.That(blogsArray.Count, Is.GreaterThan(0));
+
+                foreach (var blog in blogsArray)
+                {
+                    Assert.That(blog["title"]?.ToString(), Is.Not.Null.And.Not.Empty);
+                    Assert.That(blog["description"]?.ToString(), Is.Not.Null.And.Not.Empty);
+                    Assert.That(blog["category"]?.ToString(), Is.Not.Null.And.Not.Empty);
+                    Assert.That(blog["numViews"]?.ToString(), Is.Not.Null.And.Not.Empty);                                        
+                    Assert.That(blog["author"]?.ToString(), Is.Not.Null.And.Not.Empty);
+                }
+                
+            });
+        }
+
+        [Test]
+        public void Test_AddBlog()
+        {
+            var randomTitle = "Test Title" + random.Next(0, 100);
+
+            var result = blog.PostBlog(randomTitle);
+            Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+            Assert.That(result.Content, Is.Not.Empty);
+
+            var content = JObject.Parse(result.Content);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(content["title"].ToString(), Is.EqualTo(randomTitle));
+                Assert.That(content["description"].ToString(), Is.EqualTo("Test Description"));
+                Assert.That(content["category"].ToString(), Is.EqualTo("TestCategory"));
+                Assert.That(content["author"].ToString(), Is.Not.Null.Or.Empty);
+
+            });
+
+            var allBlogs = blog.GetAllBlogs();
+            var blogsArray = JArray.Parse(allBlogs.Content);
+
+            Assert.That(blogsArray.ToString(), Does.Contain(content["title"].ToString()));
+        }
 
 
 
