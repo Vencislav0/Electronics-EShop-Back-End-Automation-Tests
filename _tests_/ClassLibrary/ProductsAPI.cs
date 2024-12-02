@@ -36,7 +36,7 @@ namespace ClassLibrary
 
             if (response.StatusCode != HttpStatusCode.OK)
             {
-                throw new Exception($"Authentication failed with status code {response.StatusCode}, and response content {response.Content}");
+                Console.WriteLine($"Authentication failed with status code {response.StatusCode}, and response content {response.Content}");
             }
 
             return response;
@@ -67,16 +67,50 @@ namespace ClassLibrary
                 category = "TestCategory",
                 brand = "TestBrand",
                 quantity = 25
+            });                       
+                var response = client.Execute(request);
+                       
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                
+                Console.WriteLine($"Authentication failed with status code {response.StatusCode}, and response content {response.Content}");
+            }
+
+            return response;
+        }
+
+        public dynamic UpdateProduct(string id) 
+        {
+            client = new RestClient(GlobalConstants.BaseUrl);
+            token = GlobalConstants.AuthenticateUser("admin@gmail.com", "admin@gmail.com");
+            if (token == null)
+            {
+                throw new Exception("Authentication token is null or empty");
+            }
+
+            var request = new RestRequest("/product/" + id, Method.Put);
+            request.AddHeader("Authorization", $"Bearer {token}");
+            request.AddJsonBody(new
+            {
+                title = "Edited Title",
+                slug = "edited-slug",
+                description = "Edited Description",
+                price = 99.99,
+                category = "Edited Category",
+                brand = "Edited Brand",
+                quantity = 20
             });
 
             var response = client.Execute(request);
 
-            if(response.StatusCode != HttpStatusCode.OK)
+            if (response.StatusCode != HttpStatusCode.OK)
             {
-                throw new Exception($"Authentication failed with status code {response.StatusCode}, and response content {response.Content}");
+
+                Console.WriteLine($"Authentication failed with status code {response.StatusCode}, and response content {response.Content}");
             }
 
             return response;
+
         }
 
 

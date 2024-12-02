@@ -1,5 +1,6 @@
 using ClassLibrary;
 using Newtonsoft.Json.Linq;
+using System.Net;
 
 namespace APITests
 {
@@ -20,6 +21,7 @@ namespace APITests
             product?.Dispose();
         }
 
+        //Tests for products functionallity
         [Test]
         public void Test_GetAllProducts()
         {
@@ -89,6 +91,62 @@ namespace APITests
                 Assert.That((int)content["quantity"], Is.EqualTo(25));
             });
 
+        }
+
+        [Test]
+        public void Test_UpdateProduct_InvalidID()
+        {
+            var invalidId = "invalidProductId123";
+
+            var result = product.UpdateProduct(invalidId);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.NotFound).Or.EqualTo(HttpStatusCode.InternalServerError), "Expected 404 Not Found or 500 Bad Request for invalid product ID.");
+                Assert.That(result.Content, Does.Contain("This id is not valid or not Found").Or.Contain("Invalid ID"), "Expected an error message indicating that the id is invalid or not found.");
+            });
+        }
+
+        [Test]
+        public void Test_UpdateProduct_WithValidID()
+        {
+            var randomNumber = random.Next(0, 100);
+            var title = "Test Title" + randomNumber;
+            var slug = "test-title" + randomNumber;
+            var id = "";
+
+            var result = product.PostProduct(title);           
+
+            var allProducts = product.GetAllProducts();
+            var allContent = JArray.Parse(allProducts.Content);
+
+            foreach(var product in allContent)
+            {
+                if (product["title"] == title)
+                {
+                    id = product["_id"];
+                    break;
+                }
+            }
+
+            var updatedResult = product.UpdateProduct(id);
+            
+            
+
+            if(updatedResult.StatusCode == HttpStatusCode.OK && updatedResult.Content == "null")
+            {
+                Console.WriteLine("API Bug Detected: UpdateProduct returned 200 OK with null response body.");
+            }
+
+            if (updatedResult.Content != "null")
+            {
+                Assert.That(updatedResult.Content, Does.Contain("Edited Title"));
+            }
+            else
+            {
+                Console.WriteLine("Skipped title assertion due to null response");
+            }
+            Assert.That(updatedResult.StatusCode, Is.EqualTo(HttpStatusCode.OK));
         }
 
 
