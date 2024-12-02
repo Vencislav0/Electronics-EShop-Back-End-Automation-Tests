@@ -149,6 +149,40 @@ namespace APITests
             Assert.That(updatedResult.StatusCode, Is.EqualTo(HttpStatusCode.OK));
         }
 
+        [Test]
+        public void Test_DeleteProduct()
+        {
+            var randomNumber = random.Next(0, 100);
+            var slug ="test-title" + randomNumber;
+            var AddProduct = product.PostProduct("Test Title" + randomNumber);
+
+            var allProduct = product.GetAllProducts();
+            var productsArray = JArray.Parse(allProduct.Content);
+
+            dynamic productToDelete = null;
+
+            foreach (var product in productsArray)
+            {
+                if(product["slug"].ToString() == slug)
+                {
+                    productToDelete = product;
+                    break;
+                }
+            }
+            Assert.That(productToDelete, Is.Not.Null);
+            var productID = productToDelete["_id"].ToString();
+
+            var deleteRequest = product.DeleteProduct(productID);
+            
+            Assert.That(deleteRequest.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+
+            var verifyGetRequest = product.GetProduct(productID);
+
+            Assert.That(verifyGetRequest.Content, Is.EqualTo("null"));
+            Assert.That(productsArray, Does.Not.Contain("Test Title" + randomNumber));
+
+        }
+
 
 
 

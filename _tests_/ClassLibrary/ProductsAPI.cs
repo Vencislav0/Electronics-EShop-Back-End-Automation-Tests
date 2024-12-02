@@ -45,6 +45,32 @@ namespace ClassLibrary
 
         }
 
+        public dynamic GetProduct(string id)
+        {
+            client = new RestClient(GlobalConstants.BaseUrl);
+            token = GlobalConstants.AuthenticateUser("admin@gmail.com", "admin@gmail.com");
+
+            if (token == null)
+            {
+                throw new Exception("Authentication token is null or empty");
+            }
+
+            var request = new RestRequest("/product/" + id, Method.Get);
+            request.AddHeader("Authorization", $"Bearer {token}");
+
+            var response = client.Execute(request);
+
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                Console.WriteLine($"Authentication failed with status code {response.StatusCode}, and response content {response.Content}");
+            }
+
+            return response;
+
+
+
+        }
+
         public dynamic PostProduct(string title)
         {
             
@@ -111,6 +137,29 @@ namespace ClassLibrary
 
             return response;
 
+        }
+
+        public dynamic DeleteProduct(string id)
+        {
+            client = new RestClient(GlobalConstants.BaseUrl);
+            token = GlobalConstants.AuthenticateUser("admin@gmail.com", "admin@gmail.com");
+            if (token == null)
+            {
+                throw new Exception("Authentication token is null or empty");
+            }
+
+            var request = new RestRequest("/product/" + id, Method.Delete);
+            request.AddHeader("Authorization", $"Bearer {token}");
+
+            var response = client.Execute(request);
+
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+
+                Console.WriteLine($"Authentication failed with status code {response.StatusCode}, and response content {response.Content}");
+            }
+
+            return response;
         }
 
 
