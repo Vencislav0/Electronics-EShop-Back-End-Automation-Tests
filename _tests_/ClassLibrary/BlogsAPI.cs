@@ -44,6 +44,32 @@ namespace ClassLibrary
 
         }
 
+        public dynamic GetBlog(string id)
+        {
+            client = new RestClient(GlobalConstants.BaseUrl);
+            token = GlobalConstants.AuthenticateUser("admin@gmail.com", "admin@gmail.com");
+
+            if (token == null)
+            {
+                throw new Exception("Authentication token is null or empty");
+            }
+
+            var request = new RestRequest("/blog/" + id, Method.Get);
+            request.AddHeader("Authorization", $"Bearer {token}");
+
+            var response = client.Execute(request);
+
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                Console.WriteLine($"Authentication failed with status code {response.StatusCode}, and response content {response.Content}");
+            }
+
+            return response;
+
+
+
+        }
+
         public dynamic PostBlog(string title)
         {
 
@@ -71,6 +97,52 @@ namespace ClassLibrary
                 Console.WriteLine($"Authentication failed with status code {response.StatusCode}, and response content {response.Content}");
             }
 
+            return response;
+        }
+
+        public dynamic UpdateBlog(string id)
+        {
+            client = new RestClient(GlobalConstants.BaseUrl);
+            token = GlobalConstants.AuthenticateUser("admin@gmail.com", "admin@gmail.com");
+            if (token == null)
+            {
+                throw new Exception("Authentication token is null or empty");
+            }
+            var request = new RestRequest("/blog/" + id, Method.Put);
+            request.AddHeader("Authorization", $"Bearer {token}");
+            request.AddJsonBody(new
+            {
+                title = "Updated title",
+                description = "Updated description",
+                category = "Updated category"
+            });
+            var response = client.Execute(request);
+
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                Console.WriteLine($"Authentication failed with status code {response.StatusCode}, and response content {response.Content}");
+            }
+            return response;
+
+        }
+
+        public dynamic DeleteBlog(string id)
+        {
+            client = new RestClient(GlobalConstants.BaseUrl);
+            token = GlobalConstants.AuthenticateUser("admin@gmail.com", "admin@gmail.com");
+            if (token == null)
+            {
+                throw new Exception("Authentication token is null or empty");
+            }
+            var request = new RestRequest("/blog/" + id, Method.Delete);
+            request.AddHeader("Authorization", $"Bearer {token}");
+
+            var response = client.Execute(request);
+
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                Console.WriteLine($"Authentication failed with status code {response.StatusCode}, and response content {response.Content}");
+            }
             return response;
         }
 

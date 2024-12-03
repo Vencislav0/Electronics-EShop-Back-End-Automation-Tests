@@ -238,6 +238,79 @@ namespace APITests
             Assert.That(blogsArray.ToString(), Does.Contain(content["title"].ToString()));
         }
 
+        [Test]
+        public void Test_UpdateBlog()
+        {
+            var randomTitle = "Test Title" + random.Next(0, 100);
+            var CreateBlog = blog.PostBlog(randomTitle);
+
+            string blogID = "";
+            var allBlogs = blog.GetAllBlogs();
+
+            var blogsArray = JArray.Parse(allBlogs.Content);
+
+            foreach (var blog in blogsArray)
+            {
+                if (blog["title"] == randomTitle)
+                {
+                    blogID = blog["_id"].ToString();
+                }
+            }
+
+            Assert.That(blogID, Is.Not.Null.Or.Empty, "The blog wasnt found");
+
+            var updateBlog = blog.UpdateBlog(blogID);
+
+            var updatedBlogContent = JObject.Parse(updateBlog.Content);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(updatedBlogContent["title"].ToString(), Is.EqualTo("Updated title"));
+                Assert.That(updatedBlogContent["description"].ToString(), Is.EqualTo("Updated description"));
+                Assert.That(updatedBlogContent["category"].ToString(), Is.EqualTo("Updated category"));
+            });
+            
+
+
+
+        }
+
+        [Test]
+        public void Test_DeleteBlog()
+        {
+            var postBlog = blog.PostBlog("Blog to delete");
+            string blogID = "";
+            var allBlogs = blog.GetAllBlogs();
+
+            var blogsArray = JArray.Parse(allBlogs.Content);
+
+            foreach (var blog in blogsArray)
+            {
+                if (blog["title"] == "Blog to delete")
+                {
+                    blogID = blog["_id"].ToString();
+                }
+            }
+
+            Assert.That(blogID, Is.Not.Null.Or.Empty, "The blog wasnt found");
+            
+            var deleteBlog = blog.DeleteBlog(blogID);
+            var getDeletedBlog = blog.GetBlog(blogID);
+
+            Assert.Multiple(() =>
+            {                               
+                Assert.That(deleteBlog.StatusCode, Is.EqualTo(HttpStatusCode.OK), $"Couldnt delete the blog status code:{deleteBlog.StatusCode}");
+                Assert.That(deleteBlog.Content, Is.Not.Null.Or.Empty, "Expected Content is missing");
+                Assert.That(getDeletedBlog.Content, Is.EqualTo("null"));
+            });
+            
+            
+            
+
+            
+
+        }
+
 
 
     }
