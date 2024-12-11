@@ -87,7 +87,7 @@ namespace ClassLibrary
             request.AddJsonBody(new
             {
                 title,
-                slug = "TestSlug",
+                slug = title,
                 description = "This is a test description",
                 price = 1000.99,
                 category = "TestCategory",
