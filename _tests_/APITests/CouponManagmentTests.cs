@@ -1,4 +1,5 @@
 ﻿using ClassLibrary;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using RestSharp;
 using System;
@@ -121,6 +122,70 @@ namespace APITests
             Assert.That(verifyResponse.Content, Is.EqualTo("null").Or.Null, $"Coupon found likely unsuccessful deletion");
 
 
+        }
+
+        [Test]
+        public void CouponApplicationToOrderTest()
+        {
+            //Get the first product id
+            var getAllProductsRequest = new RestRequest("/product/", Method.Get);
+            getAllProductsRequest.AddHeader("Authorization", $"Bearer {adminToken}");
+
+            var getAllProductsResponse = client.Execute(getAllProductsRequest);
+
+            var firstProductID = JArray.Parse(getAllProductsResponse.Content).First()["_id"]?.ToString();
+
+            Assert.That(firstProductID, Is.Not.Null.Or.Empty, "product id is null or empty");
+
+            //Create the coupon
+
+            string couponName = $"DISCOUNT10_{random.Next(1, 1000)}";
+
+            var createCouponRequest = new RestRequest("/coupon/", Method.Post);
+            createCouponRequest.AddHeader("Authorization", $"Bearer {adminToken}");
+            createCouponRequest.AddJsonBody(new { name = couponName, expiry = "2024-09-30T23:59:59Z", discount = 10 });
+
+            var createCouponResponse = client.Execute(createCouponRequest);
+
+            Assert.That(createCouponResponse.IsSuccessful, $"Unable to create a coupon status code:{createCouponResponse.StatusCode}");
+
+            //Adding coupon to cart
+            var cartRequest = new RestRequest("/user/cart", Method.Post);
+            cartRequest.AddHeader("Authorization", $"Bearer {userToken}");
+            cartRequest.AddJsonBody(new
+            {
+                cart = new[]
+                {
+                    new { _id = firstProductID, count = 3, color = "red" }
+                    
+                }
+
+            });
+
+            var cartResponse = client.Execute(cartRequest);
+
+            Assert.That(cartResponse.IsSuccessful, Is.True, $"Unable to add items to cart {cartResponse.StatusCode}");
+
+            //Applying the coupon
+
+            var applyCouponRequest = new RestRequest("/user/cart/applycoupon", Method.Post);
+            applyCouponRequest.AddHeader("Authorization", $"Bearer {userToken}");
+            applyCouponRequest.AddJsonBody(new { coupon = couponName });
+
+            var applyCouponResponse = client.Execute(applyCouponRequest);
+
+            Assert.That(applyCouponResponse.IsSuccessful, Is.True, $"Unable to apply coupon {cartResponse.StatusCode}");
+
+            //Place the order with the applied coupon
+
+            var placeOrderRequest = new RestRequest("/user/cart/cash-order", Method.Post);
+            placeOrderRequest.AddHeader("Authorization", $"Bearer {userToken}");
+            placeOrderRequest.AddJsonBody(JsonConvert.SerializeObject(new { COD = true, couponApplied = false }));
+
+            var placeOrderResponse = client.Execute(placeOrderRequest);
+
+            Assert.That(placeOrderResponse.IsSuccessful, Is.True, $"Unable to place order {cartResponse.StatusCode}");
+            Assert.That(JObject.Parse(placeOrderResponse.Content)["message"]?.ToString(), Is.EqualTo("success"));
         }
     }
 }
