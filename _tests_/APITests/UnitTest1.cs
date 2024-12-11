@@ -6,8 +6,7 @@ namespace APITests
 {
     public class Tests
     {
-        protected ProductsAPI product;
-        protected GlobalConstants globalConstants;
+        protected ProductsAPI product;        
         protected Random random;
         protected BlogsAPI blog;
         [SetUp]
@@ -303,12 +302,38 @@ namespace APITests
                 Assert.That(deleteBlog.Content, Is.Not.Null.Or.Empty, "Expected Content is missing");
                 Assert.That(getDeletedBlog.Content, Is.EqualTo("null"));
             });
-            
-            
-            
-
+                                   
             
 
+        }
+
+        [Test]
+        public void BlogPostLifeCycle()
+        {
+            //POST blog
+           var blogPosted =  blog.PostBlog("new Blog" + random.Next(1, 1000));
+
+            var blogID = JObject.Parse(blogPosted.Content)["_id"]?.ToString();
+
+            Assert.That(blogPosted.IsSuccessful, $"POST Failed with status code {blogPosted.StatusCode}.");
+            Assert.That(blogID, Is.Not.Null.Or.Empty, $"ID value is not as expected instead its: {blogID}.");
+
+            //UPDATE blog
+
+            var updatedBlog = blog.UpdateBlog(blogID);
+            var updatedContent = JObject.Parse(updatedBlog.Content);
+
+            Assert.That(updatedBlog.IsSuccessful, $"UPDATE Failed with status code {updatedBlog.StatusCode}.");
+            Assert.That(updatedContent["title"].ToString(), Is.EqualTo("Updated title"), $"Wrong title likely update failed.");
+
+            //DELETE blog
+
+            var deleteBlog = blog.DeleteBlog(blogID);
+
+            var verifyBlogDeleted = blog.GetBlog(blogID);
+
+            Assert.That(deleteBlog.IsSuccessful, $"DELETE Failed with status code {updatedBlog.StatusCode}.");
+            Assert.That(verifyBlogDeleted.Content, Is.EqualTo("null"), "Blog found likely failed delete request.");
         }
 
 

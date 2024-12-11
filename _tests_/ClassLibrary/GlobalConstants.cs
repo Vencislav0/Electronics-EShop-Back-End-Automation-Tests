@@ -1,10 +1,11 @@
 ﻿using Newtonsoft.Json.Linq;
 using RestSharp;
+using System.ComponentModel.DataAnnotations;
 using System.Net;
 
 namespace ClassLibrary
 {
-    public class GlobalConstants
+    public static class GlobalConstants
     {
         public const string BaseUrl = "http://localhost:5000/api";
         private static RestClient client;
@@ -13,7 +14,8 @@ namespace ClassLibrary
         {
             client = new RestClient(BaseUrl);
 
-            var AuthRequest = new RestRequest("/user/admin-login", Method.Post);
+            var resource = username == "admin@gmail.com" ? "/user/admin-login" : "/user/login";
+            var AuthRequest = new RestRequest(resource, Method.Post);
             AuthRequest.AddJsonBody(new { email = username, password });
 
             var AuthResponse = client.Execute(AuthRequest);
@@ -24,9 +26,10 @@ namespace ClassLibrary
             }
 
             var content = JObject.Parse(AuthResponse.Content);
-            return content["token"]?.ToString();
+            return content["token"].ToString();
         }
 
 
+        
     }
 }
