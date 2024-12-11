@@ -101,9 +101,11 @@ namespace APITests
             deleteColorRequest.AddHeader("Authorization", $"Bearer {adminToken}");
 
             var deleteResponse = client.Execute(deleteColorRequest);
+            var deleteErrorMessage = JObject.Parse(deleteResponse.Content)["message"]?.ToString();
 
             Assert.That(!deleteResponse.IsSuccessful, $"Unexpected Successful Response{deleteResponse.StatusCode}.");
             Assert.That(deleteResponse.StatusCode, Is.EqualTo(HttpStatusCode.InternalServerError), $"Status code differ from the expected one ${addColorResponse.StatusCode}");
+            Assert.That(deleteErrorMessage, Is.EqualTo("This id is not valid or not Found"));
         }
 
     }

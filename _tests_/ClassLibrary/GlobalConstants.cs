@@ -12,21 +12,42 @@ namespace ClassLibrary
 
         public static string AuthenticateUser(string username, string password)
         {
-            client = new RestClient(BaseUrl);
-
-            var resource = username == "admin@gmail.com" ? "/user/admin-login" : "/user/login";
-            var AuthRequest = new RestRequest(resource, Method.Post);
-            AuthRequest.AddJsonBody(new { email = username, password });
-
-            var AuthResponse = client.Execute(AuthRequest);
-
-            if (AuthResponse.StatusCode != HttpStatusCode.OK)
+            for (int i = 0; i < 3; i++)
             {
-                throw new Exception($"Authentication failed with status code {AuthResponse.StatusCode}, and response content {AuthResponse.Content}");               
+                try
+                {
+                    client = new RestClient(BaseUrl);
+
+                    var resource = username == "admin@gmail.com" ? "/user/admin-login" : "/user/login";
+                    var AuthRequest = new RestRequest(resource, Method.Post);
+                    AuthRequest.AddJsonBody(new { email = username, password });
+
+                    var AuthResponse = client.Execute(AuthRequest);
+
+                    if (AuthResponse.StatusCode != HttpStatusCode.OK)
+                    {
+                        throw new Exception($"Authentication failed with status code {AuthResponse.StatusCode}, and response content {AuthResponse.Content}");
+                    }
+
+                    var content = JObject.Parse(AuthResponse.Content);
+                    return content["token"].ToString();
+                    
+                }
+                catch (Exception ex)
+                {
+                    client = new RestClient(BaseUrl);
+
+                    var resource = "/user/register";
+                    var AuthRequest = new RestRequest(resource, Method.Post);
+                    AuthRequest.AddJsonBody(new { firstname = "John", lastname = "Doe", email = username, mobile = "+1234567890", password });
+
+                    var AuthResponse = client.Execute(AuthRequest);
+                    
+                    
+                }
             }
 
-            var content = JObject.Parse(AuthResponse.Content);
-            return content["token"].ToString();
+            throw new Exception("All Authentication tries failed.");
         }
 
 
