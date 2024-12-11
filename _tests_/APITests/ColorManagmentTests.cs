@@ -3,7 +3,9 @@ using Newtonsoft.Json.Linq;
 using RestSharp;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -71,7 +73,38 @@ namespace APITests
 
         }
 
+        [Test]
+        public void ColorLifeCycleNegativeTest()
+        {
+            //Post request
+            var invalidToken = "invalid";
 
+            var addColorRequest = new RestRequest("/color/", Method.Post);
+            addColorRequest.AddHeader("Authorization", $"Bearer {invalidToken}");
+            addColorRequest.AddJsonBody(new { title = $"Color_{random.Next(1, 1000)}" });
+
+            var addColorResponse = client.Execute(addColorRequest);
+            
+            Assert.That(!addColorResponse.IsSuccessful, Is.True, "Unexpected success the response should be unsuccessful");
+            Assert.That(addColorResponse.StatusCode, Is.EqualTo(HttpStatusCode.InternalServerError).Or.EqualTo(HttpStatusCode.BadRequest), $"Status code differ from the expected one ${addColorResponse.StatusCode}");
+
+            //Getting the invalid color
+            var getColorRequest = new RestRequest("/color/" + "invalidID", Method.Get);
+
+            var getColorResponse = client.Execute(getColorRequest);
+
+            Assert.That(!getColorResponse.IsSuccessful, Is.True, "Unexpected success the response should be unsuccessful");
+            Assert.That(getColorResponse.StatusCode, Is.EqualTo(HttpStatusCode.InternalServerError), $"Status code differ from the expected one ${addColorResponse.StatusCode}");
+
+            //Delete attempt on invalid ID
+            var deleteColorRequest = new RestRequest("/color/" + "InvalidID", Method.Delete);
+            deleteColorRequest.AddHeader("Authorization", $"Bearer {adminToken}");
+
+            var deleteResponse = client.Execute(deleteColorRequest);
+
+            Assert.That(!deleteResponse.IsSuccessful, $"Unexpected Successful Response{deleteResponse.StatusCode}.");
+            Assert.That(deleteResponse.StatusCode, Is.EqualTo(HttpStatusCode.InternalServerError), $"Status code differ from the expected one ${addColorResponse.StatusCode}");
+        }
 
     }
 }
